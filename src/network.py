@@ -17,7 +17,8 @@ class Network:
             self.client.connect(self.addr)
             return pickle.loads(self.client.recv(2048))
         except:
-            pass
+            print("Failed to connect to server")
+            exit(1)
     
     def send(self, data):
         try:

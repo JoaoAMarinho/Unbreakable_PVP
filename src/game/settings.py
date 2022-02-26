@@ -1,4 +1,4 @@
-LEVEL_MAP = [
+ARENA_1 = [
 '                            ',
 '                            ',
 '                            ',
@@ -7,7 +7,7 @@ LEVEL_MAP = [
 'XXXXX         XX         XX ',
 ' XXXX       XX              ',
 ' XX    X  XXXX    XX  XX    ',
-'       X  XXXX    XX  XXX   ',
+'       X  XXXXO   XX  XXX   ',
 '    XXXX  XXXXXX  XX  XXXX  ',
 'XXXXXXXX  XXXXXX  XX  XXXX  ']
 
@@ -17,7 +17,8 @@ SCREEN_HEIGHT = 720
 
 # colors 
 BG_COLOR = '#060C17'
-PLAYER_COLOR = '#C4F7FF'
+PLAYER_COLOR = '#B0BF4E'
+ENEMY_COLOR = '#FFC5C4'
 TILE_COLOR = '#94D7F2'
 
 # camera

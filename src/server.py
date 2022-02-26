@@ -2,8 +2,7 @@ import socket
 from _thread import *
 import pickle
 import sys
-
-from game.player import PlayerInfo
+from traceback import print_tb
 
 server = "192.168.1.115"
 port = 5555
@@ -18,24 +17,25 @@ except socket.error as e:
 s.listen(2)
 print("Waiting for a connection, Server Started")
 
-players = [PlayerInfo(10,10,(0,0), (255, 0, 0)), PlayerInfo(10,10,(100,100), (0, 0, 255))]
+players = ["P", "O"]
 
 def threaded_client(conn, player):
     conn.send(pickle.dumps(players[player]))
+
     reply = ""
     while True:
         try:
             data = pickle.loads(conn.recv(2048))
-            players[player] = data
-            
+
             if not data:
                 print("Disconnected")
                 break
+            elif data == "connected":
+                reply = not (player == 0 and players[1] == "O" or player == 1 and players[0] == "P")
             else:
+                players[player] = data
                 reply = players[0] if player == 1 else players[1]
-                print("Received ", data)
-                print("Sending ", reply)
-        
+            
             conn.sendall(pickle.dumps(reply))
         except:
             break
@@ -46,8 +46,13 @@ def threaded_client(conn, player):
 currentPlayer = 0
 
 while True:
-    conn, addr = s.accept()
-    print("Connected to:", addr)
-
-    start_new_thread(threaded_client, (conn, currentPlayer))
-    currentPlayer += 1
+    try:
+        conn, addr = s.accept()
+        print("Connected to:", addr)
+        
+        start_new_thread(threaded_client, (conn, currentPlayer))
+        currentPlayer += 1
+    except KeyboardInterrupt:
+        print("Ending program")
+        break
+        
