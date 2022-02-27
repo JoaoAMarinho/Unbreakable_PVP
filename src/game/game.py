@@ -27,7 +27,7 @@ class Game:
                 if col == 'P' or col == 'O':
                     if self.network.get_player_info() == col:
                         self.player = Player((x,y), [self.visible_sprites, self.active_sprites], col, self.collision_sprites)
-                        self.network.send(self.player.get_position())
+                        self.network.send((self.player.get_position(), self.player.status, self.player.facing_right))
                     else:
                         self.opponent = Player((x,y), [self.visible_sprites, self.collision_sprites], col, self.collision_sprites)
     
@@ -36,7 +36,7 @@ class Game:
             self.ready = self.network.send("connected")
             return
 
-        self.receive_server_info()
+        self.parse_server_info()
         self.active_sprites.update()
         
     def draw(self):
@@ -46,9 +46,13 @@ class Game:
             # -- draw menu screen (waiting)
             pass
 
-    def receive_server_info(self):
-        self.opponent.position = self.network.send(self.player.get_position())
+    def parse_server_info(self):
+        response = self.network.send((self.player.get_position(), self.player.status, self.player.facing_right))
+        self.opponent.position = response[0]
+        self.opponent.status = response[1]
+        self.opponent.facing_right = response[2]
         self.opponent.change_coords()
+        self.opponent.animate()
 
 
 class CameraGroup(pygame.sprite.Group):
