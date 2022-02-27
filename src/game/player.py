@@ -12,7 +12,7 @@ class Player(pygame.sprite.Sprite):
 
         # player movement
         self.direction = pygame.math.Vector2()
-        self.speed = 8
+        self.speed = 7
         self.gravity = 0.8
         self.jump_speed = 16
         self.on_floor = False
@@ -55,7 +55,7 @@ class Player(pygame.sprite.Sprite):
         else:
             self.direction.x = 0
 
-        if (keys[pygame.K_UP] or keys[pygame.K_w]) and self.on_floor:
+        if (keys[pygame.K_UP] or keys[pygame.K_w] or keys[pygame.K_SPACE]) and self.on_floor:
             self.direction.y = -self.jump_speed
 
     def horizontal_collisions(self):
