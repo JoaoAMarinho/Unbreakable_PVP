@@ -24,22 +24,22 @@ class Game:
                 x = col_index * TILE_SIZE
                 y = row_index * TILE_SIZE
                 if col == 'X':
-                    Tile((x,y), [self.visible_sprites])
+                    Tile((x,y), [self.visible_sprites, self.collision_sprites])
                 if col == 'P' or col == 'O':
                     if self.network.get_player_info() == col:
-                        self.player = Player((x,y), [self.visible_sprites, self.active_sprites], col)
-                        self.network.send(self.player.get_info())
+                        self.player = Player((x,y), [self.visible_sprites, self.active_sprites], col, self.collision_sprites)
+                        self.network.send(self.player.get_position())
                     else:
-                        self.opponent = Player((x,y), [self.visible_sprites], col)
-        
+                        self.opponent = Player((x,y), [self.visible_sprites], col, self.collision_sprites)
+    
     def run(self):
-        if self.ready:
-            self.receive_server_info()
-            self.active_sprites.update()
+        if not self.ready:
+            self.ready = self.network.send("connected")
             return
-        
-        self.ready = self.network.send("connected")
 
+        self.receive_server_info()
+        self.active_sprites.update()
+        
     def draw(self):
         if self.ready:
             self.visible_sprites.draw(self.display_surface)
@@ -48,5 +48,5 @@ class Game:
             pass
 
     def receive_server_info(self):
-        self.opponent.info = self.network.send(self.player.get_info())
-        self.opponent.change_pos()
+        self.opponent.position = self.network.send(self.player.get_position())
+        self.opponent.change_coords()

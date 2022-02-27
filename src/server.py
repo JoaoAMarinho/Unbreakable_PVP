@@ -43,15 +43,21 @@ def threaded_client(conn, player):
     print("Lost connection")
     conn.close()
 
-currentPlayer = 0
+current_player = 0
 
 while True:
     try:
         conn, addr = s.accept()
         print("Connected to:", addr)
         
-        start_new_thread(threaded_client, (conn, currentPlayer))
-        currentPlayer += 1
+        # game test reset
+        if current_player == 2:
+            print("reset happen")
+            current_player = 0
+            players = ["P", "O"]
+
+        start_new_thread(threaded_client, (conn, current_player))
+        current_player += 1
     except KeyboardInterrupt:
         print("Ending program")
         break
