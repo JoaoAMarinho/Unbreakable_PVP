@@ -6,6 +6,7 @@ class Player(pygame.sprite.Sprite):
     def __init__(self, pos, groups, type, collision_sprites):
         super().__init__(groups)
         self.import_player_assets()
+        self.start_pos = pos
         
         # player sprites
         self.frame_index = 0
@@ -24,7 +25,7 @@ class Player(pygame.sprite.Sprite):
 
         # player stats
         self.position = pygame.Vector2(pos)
-        self.hp = 3
+        self.points = 0
         self.status = 'idle'
         self.facing_right = True
 
@@ -114,6 +115,15 @@ class Player(pygame.sprite.Sprite):
         if self.on_floor and self.direction.y != 0:
             self.on_floor = False
     
+    def out_of_bounds(self):
+        if self.rect.y < SCREEN_HEIGHT + 150: return False
+
+        self.points -= 1
+        self.rect.topleft = self.start_pos
+        self.update_final_position()
+        return True
+
+    # -- Animate player sprite -- #
     def animate(self):
         animation = self.animations[self.status]
 
@@ -141,3 +151,6 @@ class Player(pygame.sprite.Sprite):
     def shoot(self):
         self.can_shoot = False
         self.shooting = True
+    
+    def has_won(self):
+        return self.points >= 3

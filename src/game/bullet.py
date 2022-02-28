@@ -32,17 +32,15 @@ class Bullet(pygame.sprite.Sprite):
 
     # -- Check if bullet is out of bounds -- #
     def out_of_bounds(self):
-        window_size = pygame.display.get_window_size()
-        
-        return (self.rect.x >= window_size[0] + BULLET_LIMIT or self.rect.x <= -BULLET_LIMIT
-            or self.rect.y >= window_size[1] + BULLET_LIMIT or self.rect.y <= -BULLET_LIMIT)
+        return (self.rect.x >= SCREEN_WIDTH + BULLET_LIMIT or self.rect.x <= -BULLET_LIMIT
+            or self.rect.y >= SCREEN_HEIGHT + BULLET_LIMIT or self.rect.y <= -BULLET_LIMIT)
 
     # -- Check for collisions -- #
     def check_collision(self):
         for sprite in self.collision_sprites.sprites():
             if sprite.rect.colliderect(self.rect):
                 if isinstance(sprite, Player):
-                    sprite.hp -= 1
+                    self.shooter.points += 1
                 return True
         return False
 

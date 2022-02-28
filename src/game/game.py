@@ -10,6 +10,8 @@ class GameState(Enum):
     NOT_READY = 1
     READY = 2
     PLAYING = 3
+    WIN = 4
+    LOSE = 5
 
 class Game:
     def __init__(self):
@@ -35,7 +37,7 @@ class Game:
                 if col == 'P' or col == 'O':
                     if self.network.get_player_info() == col:
                         self.player = Player((x,y), [self.visible_sprites, self.active_sprites], col, self.collision_sprites)
-                        self.network.send((self.player.get_position(), self.player.status, self.player.facing_right))
+                        self.network.send((self.player.get_position(), self.player.status, self.player.facing_right, self.player.points))
                     else:
                         self.opponent = Player((x,y), [self.visible_sprites, self.collision_sprites], col, self.collision_sprites)
     
@@ -44,29 +46,56 @@ class Game:
             if self.network.send("connected"):
                 self.state = GameState.READY
             return
-
-        self.parse_server_info()
-        self.active_sprites.update()
+        elif self.state == GameState.READY:
+            self.active_sprites.update()
+            if self.player.out_of_bounds(): self.visible_sprites.reset_camera()
+            self.send_game_info()
+            self.check_is_over()
         
     def draw(self):
         if self.state == GameState.NOT_READY:
             self.draw_wait_menu()
         elif self.state == GameState.READY:
             self.visible_sprites.custom_draw(self.player)
+        elif self.state == GameState.WIN:
+            self.draw_win_menu()
+        elif self.state == GameState.LOSE:
+            self.draw_lose_menu()
         else:
             # -- draw other menus
             pass
     
+    def check_is_over(self):
+        if self.player.has_won():
+            self.state = GameState.WIN
+            return True
+        if self.opponent.has_won():
+            self.state = GameState.LOSE
+            return True
+
+        return False
+
     def draw_wait_menu(self):
         font = pygame.font.Font('./assets/Katracy.ttf', 40)
         text = font.render("WAITING FOR A MATCH!", True, (99, 181, 181))
-        self.display_surface.blit(text, (self.display_surface.get_size()[0]/2-text.get_size()[0]/2, self.display_surface.get_size()[1]/2))
+        self.display_surface.blit(text, (SCREEN_WIDTH/2-text.get_size()[0]/2, SCREEN_HEIGHT/2))
 
-    def parse_server_info(self):
-        response = self.network.send((self.player.get_position(), self.player.status, self.player.facing_right))
+    def draw_win_menu(self):
+        font = pygame.font.Font('./assets/Katracy.ttf', 40)
+        text = font.render("YOU WON! :)", True, (99, 181, 181))
+        self.display_surface.blit(text, (SCREEN_WIDTH/2-text.get_size()[0]/2, SCREEN_HEIGHT/2))
+    
+    def draw_lose_menu(self):
+        font = pygame.font.Font('./assets/Katracy.ttf', 40)
+        text = font.render("YOU LOST! :(", True, (99, 181, 181))
+        self.display_surface.blit(text, (SCREEN_WIDTH/2-text.get_size()[0]/2, SCREEN_HEIGHT/2))
+    
+    def send_game_info(self):
+        response = self.network.send((self.player.get_position(), self.player.status, self.player.facing_right, self.player.points))
         self.opponent.position = response[0]
         self.opponent.status = response[1]
         self.opponent.facing_right = response[2]
+        self.opponent.points = response[3]
         self.opponent.change_coords()
         self.opponent.animate()
 
@@ -84,36 +113,44 @@ class Game:
 
 
 class CameraGroup(pygame.sprite.Group):
-	def __init__(self):
-		super().__init__()
-		self.display_surface = pygame.display.get_surface()
-		self.offset = pygame.math.Vector2(100,300)
+    def __init__(self):
+        super().__init__()
+        self.display_surface = pygame.display.get_surface()
+        self.offset = pygame.math.Vector2(100,300)
 
-		# camera rectangle
-		cam_left = CAMERA_BORDERS['left']
-		cam_top = CAMERA_BORDERS['top']
-		cam_width = self.display_surface.get_size()[0] - (cam_left + CAMERA_BORDERS['right'])
-		cam_height = self.display_surface.get_size()[1] - (cam_top + CAMERA_BORDERS['bottom'])
+        # camera rectangle
+        cam_left = CAMERA_BORDERS['left']
+        cam_top = CAMERA_BORDERS['top']
+        cam_width = SCREEN_WIDTH - (cam_left + CAMERA_BORDERS['right'])
+        cam_height = SCREEN_HEIGHT - (cam_top + CAMERA_BORDERS['bottom'])
 
-		self.camera_rect = pygame.Rect(cam_left,cam_top,cam_width,cam_height)
+        self.camera_rect = pygame.Rect(cam_left,cam_top,cam_width,cam_height)
+    
+    def reset_camera(self):
+        cam_left = CAMERA_BORDERS['left']
+        cam_top = CAMERA_BORDERS['top']
+        cam_width = SCREEN_WIDTH - (cam_left + CAMERA_BORDERS['right'])
+        cam_height = SCREEN_HEIGHT - (cam_top + CAMERA_BORDERS['bottom'])
 
-	def custom_draw(self,player):
+        self.camera_rect = pygame.Rect(cam_left,cam_top,cam_width,cam_height)
 
-		# update camera position
-		if player.rect.left < self.camera_rect.left:
-			self.camera_rect.left = player.rect.left
-		if player.rect.right > self.camera_rect.right:
-			self.camera_rect.right = player.rect.right
-		if player.rect.top < self.camera_rect.top:
-			self.camera_rect.top = player.rect.top
-		if player.rect.bottom > self.camera_rect.bottom:
-			self.camera_rect.bottom = player.rect.bottom
+    def custom_draw(self,player):
 
-		# camera offset 
-		self.offset = pygame.math.Vector2(
-			self.camera_rect.left - CAMERA_BORDERS['left'],
-			self.camera_rect.top - CAMERA_BORDERS['top'])
+        # update camera position
+        if player.rect.left < self.camera_rect.left:
+            self.camera_rect.left = player.rect.left
+        if player.rect.right > self.camera_rect.right:
+            self.camera_rect.right = player.rect.right
+        if player.rect.top < self.camera_rect.top:
+            self.camera_rect.top = player.rect.top
+        if player.rect.bottom > self.camera_rect.bottom:
+            self.camera_rect.bottom = player.rect.bottom
 
-		for sprite in self.sprites():
-			offset_pos = sprite.rect.topleft - self.offset
-			self.display_surface.blit(sprite.image,offset_pos)
+        # camera offset 
+        self.offset = pygame.math.Vector2(
+            self.camera_rect.left - CAMERA_BORDERS['left'],
+            self.camera_rect.top - CAMERA_BORDERS['top'])
+
+        for sprite in self.sprites():
+            offset_pos = sprite.rect.topleft - self.offset
+            self.display_surface.blit(sprite.image,offset_pos)

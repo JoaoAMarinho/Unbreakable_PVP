@@ -12,5 +12,3 @@ Initial Menu
 Tile sprites
 Bullet sprites
 
-- Player
-respawn when fall of map
