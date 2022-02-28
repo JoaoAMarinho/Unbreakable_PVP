@@ -15,6 +15,7 @@ class Game:
     def __init__(self):
         self.network = Network()
         self.state = GameState.NOT_READY
+        self.display_surface = pygame.display.get_surface()
 
         # sprite groups
         self.visible_sprites = CameraGroup()
@@ -48,11 +49,18 @@ class Game:
         self.active_sprites.update()
         
     def draw(self):
-        if self.state == GameState.READY:
+        if self.state == GameState.NOT_READY:
+            self.draw_wait_menu()
+        elif self.state == GameState.READY:
             self.visible_sprites.custom_draw(self.player)
         else:
-            # -- draw menu screen (waiting)
+            # -- draw other menus
             pass
+    
+    def draw_wait_menu(self):
+        font = pygame.font.Font('./assets/Katracy.ttf', 40)
+        text = font.render("WAITING FOR A MATCH!", True, (99, 181, 181))
+        self.display_surface.blit(text, (self.display_surface.get_size()[0]/2-text.get_size()[0]/2, self.display_surface.get_size()[1]/2))
 
     def parse_server_info(self):
         response = self.network.send((self.player.get_position(), self.player.status, self.player.facing_right))
