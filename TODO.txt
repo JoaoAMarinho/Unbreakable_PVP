@@ -1,0 +1,16 @@
+
+-Bullets
+Send bullet information to server
+Fix information sent to server
+Parse server information
+
+-Display
+Player sprites (fix size, fix rect spacing)
+Players HP
+Win/Loose Menu
+Initial Menu
+Tile sprites
+Bullet sprites
+
+- Player
+respawn when fall of map

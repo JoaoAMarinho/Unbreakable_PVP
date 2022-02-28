@@ -20,6 +20,8 @@ def main():
                 print("Close")
                 pygame.quit()
                 sys.exit(0)
+            if event.type == pygame.MOUSEBUTTONDOWN:
+                game.click_event()
         
         # --- Game logic
         game.run()

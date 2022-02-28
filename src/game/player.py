@@ -28,6 +28,10 @@ class Player(pygame.sprite.Sprite):
         self.status = 'idle'
         self.facing_right = True
 
+        # player attack
+        self.shooting = False
+        self.can_shoot = True
+
     def import_player_assets(self):
         assets_path = "./assets/player/"
         self.animations = {'idle': [], 'run': [], 'jump': [], 'fall': [], 'attack': []}
@@ -41,7 +45,9 @@ class Player(pygame.sprite.Sprite):
 
     # -- Get player animation status -- #
     def get_status(self):
-        if self.direction.y < 0:
+        if self.shooting:
+            self.status = 'attack'
+        elif self.direction.y < 0:
             self.status = 'jump'
         elif self.direction.y > 1:
             self.status = 'fall'
@@ -114,17 +120,13 @@ class Player(pygame.sprite.Sprite):
         self.frame_index += self.animation_speed
         if self.frame_index >= len(animation):
             self.frame_index = 0
+            if self.shooting: self.shooting = False
 
         image = animation[int(self.frame_index)]
         if self.facing_right:
             self.image = image
         else:
             self.image = pygame.transform.flip(image, True, False)
-        
-        if self.on_floor:
-            self.rect = self.image.get_rect(midbottom = self.rect.midbottom)
-        else:
-            self.rect = self.image.get_rect(center = self.rect.center)
 
     def update(self):
         self.input()
@@ -135,3 +137,7 @@ class Player(pygame.sprite.Sprite):
         self.update_final_position()
         self.get_status()
         self.animate()
+    
+    def shoot(self):
+        self.can_shoot = False
+        self.shooting = True

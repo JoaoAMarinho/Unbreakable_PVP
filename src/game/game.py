@@ -1,13 +1,20 @@
 import pygame
+from enum import Enum
+from game.bullet import Bullet
 from network import Network
 from game.settings import *
 from game.player import Player
 from game.tile import Tile
 
+class GameState(Enum):
+    NOT_READY = 1
+    READY = 2
+    PLAYING = 3
+
 class Game:
     def __init__(self):
         self.network = Network()
-        self.ready = False
+        self.state = GameState.NOT_READY
 
         # sprite groups
         self.visible_sprites = CameraGroup()
@@ -32,15 +39,16 @@ class Game:
                         self.opponent = Player((x,y), [self.visible_sprites, self.collision_sprites], col, self.collision_sprites)
     
     def run(self):
-        if not self.ready:
-            self.ready = self.network.send("connected")
+        if self.state == GameState.NOT_READY:
+            if self.network.send("connected"):
+                self.state = GameState.READY
             return
 
         self.parse_server_info()
         self.active_sprites.update()
         
     def draw(self):
-        if self.ready:
+        if self.state == GameState.READY:
             self.visible_sprites.custom_draw(self.player)
         else:
             # -- draw menu screen (waiting)
@@ -53,6 +61,18 @@ class Game:
         self.opponent.facing_right = response[2]
         self.opponent.change_coords()
         self.opponent.animate()
+
+    def click_event(self):
+        if self.state == GameState.NOT_READY: return
+        
+        if self.state == GameState.READY: 
+            self.shoot()
+        
+    def shoot(self):
+        if not self.player.can_shoot:
+            return
+        self.player.shoot()
+        Bullet(self.player.rect.center, [self.visible_sprites, self.active_sprites], self.collision_sprites, self.visible_sprites.offset, self.opponent, self.player)
 
 
 class CameraGroup(pygame.sprite.Group):
