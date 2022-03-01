@@ -1,6 +1,6 @@
 import pygame
 from enum import Enum
-from game.bullet import Bullet
+from game.bullet import Bullet, Bullet_View
 from network import Network
 from game.settings import *
 from game.player import Player
@@ -23,6 +23,7 @@ class Game:
         self.visible_sprites = CameraGroup()
         self.active_sprites = pygame.sprite.Group()
         self.collision_sprites = pygame.sprite.Group()
+        self.opponent_bullets = CameraGroup()
         
         # arena setup
         self.setup_arena(ARENA_1)
@@ -37,7 +38,7 @@ class Game:
                 if col == 'P' or col == 'O':
                     if self.network.get_player_info() == col:
                         self.player = Player((x,y), [self.visible_sprites, self.active_sprites], col, self.collision_sprites)
-                        self.network.send((self.player.get_position(), self.player.status, self.player.facing_right, self.player.points))
+                        self.network.send((self.player.get_stats(), []))
                     else:
                         self.opponent = Player((x,y), [self.visible_sprites, self.collision_sprites], col, self.collision_sprites)
     
@@ -57,6 +58,7 @@ class Game:
             self.draw_wait_menu()
         elif self.state == GameState.READY:
             self.visible_sprites.custom_draw(self.player)
+            self.opponent_bullets.custom_draw(self.player)
         elif self.state == GameState.WIN:
             self.draw_win_menu()
         elif self.state == GameState.LOSE:
@@ -91,13 +93,13 @@ class Game:
         self.display_surface.blit(text, (SCREEN_WIDTH/2-text.get_size()[0]/2, SCREEN_HEIGHT/2))
     
     def send_game_info(self):
-        response = self.network.send((self.player.get_position(), self.player.status, self.player.facing_right, self.player.points))
-        self.opponent.position = response[0]
-        self.opponent.status = response[1]
-        self.opponent.facing_right = response[2]
-        self.opponent.points = response[3]
-        self.opponent.change_coords()
-        self.opponent.animate()
+        self.opponent_bullets.empty()
+
+        (opponent_stats, bullets_info) = self.network.send((self.player.get_stats(), self.player.get_bullets_info()))
+        self.opponent.update_stats(opponent_stats)
+
+        for info in bullets_info:
+            Bullet_View(self.opponent_bullets, info)
 
     def click_event(self):
         if self.state == GameState.NOT_READY: return
@@ -108,8 +110,7 @@ class Game:
     def shoot(self):
         if not self.player.can_shoot:
             return
-        self.player.shoot()
-        Bullet(self.player.rect.center, [self.visible_sprites, self.active_sprites], self.collision_sprites, self.visible_sprites.offset, self.opponent, self.player)
+        self.player.shoot(Bullet(self.player.rect.center, [self.visible_sprites, self.active_sprites], self.collision_sprites, self.visible_sprites.offset, self.opponent, self.player))
 
 
 class CameraGroup(pygame.sprite.Group):

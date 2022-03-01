@@ -1,3 +1,4 @@
+from turtle import position
 import pygame
 from game.settings import *
 from support import import_folder
@@ -7,6 +8,7 @@ class Player(pygame.sprite.Sprite):
         super().__init__(groups)
         self.import_player_assets()
         self.start_pos = pos
+        self.bullets = []
         
         # player sprites
         self.frame_index = 0
@@ -41,8 +43,26 @@ class Player(pygame.sprite.Sprite):
             full_path = assets_path + animation
             self.animations[animation] = import_folder(full_path)
 
-    def get_position(self):
-        return self.position
+    # -- Return values to send to server -- #
+    def get_stats(self):
+        return (self.position, self.points, self.status, self.facing_right)
+
+    # -- Update values received from server -- #
+    def update_stats(self, stats):
+        (position, points, status, facing_right) = stats
+        self.position = position
+        self.points = points
+        self.status = status
+        self.facing_right = facing_right
+
+        self.change_coords()
+        self.animate()
+
+    def get_bullets_info(self):
+        bullets_info = []
+        for bullet in self.bullets:
+            bullets_info.append(bullet.get_info())
+        return bullets_info
 
     # -- Get player animation status -- #
     def get_status(self):
@@ -148,9 +168,15 @@ class Player(pygame.sprite.Sprite):
         self.get_status()
         self.animate()
     
-    def shoot(self):
+    def shoot(self, bullet):
+        self.bullets.append(bullet)
         self.can_shoot = False
         self.shooting = True
+    
+    def reset_shoot(self, bullet):
+        self.can_shoot = True
+        self.bullets.remove(bullet)
+        bullet.kill()
     
     def has_won(self):
         return self.points >= 3
