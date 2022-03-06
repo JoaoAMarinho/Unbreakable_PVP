@@ -2,6 +2,7 @@ import pygame, sys
 from pygame.locals import *
 from game.settings import *
 from game.game import Game
+from game.game_data import *
 
 
 def main():
@@ -11,7 +12,7 @@ def main():
     
     screen = pygame.display.set_mode((SCREEN_WIDTH,SCREEN_HEIGHT))
     
-    game = Game()
+    game = Game(map_0)
     
     while True:
 

@@ -5,6 +5,7 @@ from network import Network
 from game.settings import *
 from game.player import Player
 from game.tile import Tile
+from support import import_csv_layout, import_cut_graphics
 
 class GameState(Enum):
     NOT_READY = 1
@@ -14,7 +15,7 @@ class GameState(Enum):
     LOSE = 5
 
 class Game:
-    def __init__(self):
+    def __init__(self, map_data):
         self.network = Network()
         self.state = GameState.NOT_READY
         self.display_surface = pygame.display.get_surface()
@@ -25,22 +26,40 @@ class Game:
         self.collision_sprites = pygame.sprite.Group()
         self.opponent_bullets = CameraGroup()
         
-        # arena setup
-        self.setup_arena(ARENA_1)
+        # map setup
+        self.setup_map(map_data)
 
-    def setup_arena(self, arena):
-        for row_index,row in enumerate(arena):
-            for col_index,col in enumerate(row):
+    def setup_map(self, map_data):
+        
+        # players setup
+        players_layout = import_csv_layout(map_data['players']) 
+        self.create_tile_group(players_layout, 'players')
+
+        # terrain setup
+        terrain_layout = import_csv_layout(map_data['terrain'])
+        self.create_tile_group(terrain_layout, 'terrain')
+    
+    def create_tile_group(self, layout, type):
+
+        for row_index, row in enumerate(layout):
+            for col_index, val in enumerate(row):
+                if val == '-1': 
+                    continue
+                
                 x = col_index * TILE_SIZE
                 y = row_index * TILE_SIZE
-                if col == 'X':
-                    Tile((x,y), [self.visible_sprites, self.collision_sprites])
-                if col == 'P' or col == 'O':
-                    if self.network.get_player_info() == col:
-                        self.player = Player((x,y), [self.visible_sprites, self.active_sprites], col, self.collision_sprites)
+
+                if type == 'terrain':
+                    terrain_tile_list = import_cut_graphics('./graphics/terrain/terrain_tiles.png')
+                    tile_surface = terrain_tile_list[int(val)]
+                    Tile((x,y), tile_surface, [self.visible_sprites, self.collision_sprites])
+
+                if type == 'players':
+                    if self.network.get_player_info() == int(val):
+                        self.player = Player((x,y), [self.visible_sprites, self.active_sprites], val, self.collision_sprites)
                         self.network.send((self.player.get_stats(), []))
                     else:
-                        self.opponent = Player((x,y), [self.visible_sprites, self.collision_sprites], col, self.collision_sprites)
+                        self.opponent = Player((x,y), [self.visible_sprites, self.collision_sprites], val, self.collision_sprites)
     
     def run(self):
         if self.state == GameState.NOT_READY:

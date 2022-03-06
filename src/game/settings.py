@@ -24,8 +24,8 @@ TILE_COLOR = '#94D7F2'
 
 # camera
 CAMERA_BORDERS = {
-	'left': 150,
-	'right': 150,
+	'left': 200,
+	'right': 200,
 	'top':50,
 	'bottom': 150
 }

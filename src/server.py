@@ -4,7 +4,7 @@ import pickle
 import sys
 from traceback import print_tb
 
-server = "192.168.1.115"
+server = "192.168.1.66"
 port = 5555
 
 s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
@@ -17,7 +17,7 @@ except socket.error as e:
 s.listen(2)
 print("Waiting for a connection, Server Started")
 
-players = ["P", "O"]
+players = [0, 1]
 
 def threaded_client(conn, player):
     conn.send(pickle.dumps(players[player]))
@@ -31,7 +31,8 @@ def threaded_client(conn, player):
                 print("Disconnected")
                 break
             elif data == "connected":
-                reply = not (player == 0 and players[1] == "O" or player == 1 and players[0] == "P")
+                index = (player + 1) % 2
+                reply = not (players[index] == index)
             else:
                 players[player] = data
                 reply = players[0] if player == 1 else players[1]
@@ -54,7 +55,7 @@ while True:
         if current_player == 2:
             print("reset happen")
             current_player = 0
-            players = ["P", "O"]
+            players = [0, 1]
 
         start_new_thread(threaded_client, (conn, current_player))
         current_player += 1
