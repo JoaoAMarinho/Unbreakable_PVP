@@ -4,6 +4,7 @@ import pickle
 import sys
 from traceback import print_tb
 
+# server ip address
 server = "192.168.1.66"
 port = 5555
 

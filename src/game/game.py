@@ -10,13 +10,13 @@ from support import import_csv_layout, import_cut_graphics
 class GameState(Enum):
     NOT_READY = 1
     READY = 2
-    PLAYING = 3
-    WIN = 4
-    LOSE = 5
+    WIN = 3
+    LOSE = 4
 
 class Game:
     def __init__(self, map_data):
         self.network = Network()
+        self.menu_drawer = MenuDrawer()
         self.state = GameState.NOT_READY
         self.display_surface = pygame.display.get_surface()
 
@@ -74,14 +74,15 @@ class Game:
         
     def draw(self):
         if self.state == GameState.NOT_READY:
-            self.draw_wait_menu()
+            self.menu_drawer.draw_wait_menu()
         elif self.state == GameState.READY:
             self.visible_sprites.custom_draw(self.player)
             self.opponent_bullets.custom_draw(self.player)
+            self.menu_drawer.draw_scores(self.player.points, self.opponent.points)
         elif self.state == GameState.WIN:
-            self.draw_win_menu()
+            self.menu_drawer.draw_win_menu()
         elif self.state == GameState.LOSE:
-            self.draw_lose_menu()
+            self.menu_drawer.draw_lose_menu()
         else:
             # -- draw other menus
             pass
@@ -95,21 +96,6 @@ class Game:
             return True
 
         return False
-
-    def draw_wait_menu(self):
-        font = pygame.font.Font('./assets/Katracy.ttf', 40)
-        text = font.render("WAITING FOR A MATCH!", True, (99, 181, 181))
-        self.display_surface.blit(text, (SCREEN_WIDTH/2-text.get_size()[0]/2, SCREEN_HEIGHT/2))
-
-    def draw_win_menu(self):
-        font = pygame.font.Font('./assets/Katracy.ttf', 40)
-        text = font.render("YOU WON! :)", True, (99, 181, 181))
-        self.display_surface.blit(text, (SCREEN_WIDTH/2-text.get_size()[0]/2, SCREEN_HEIGHT/2))
-    
-    def draw_lose_menu(self):
-        font = pygame.font.Font('./assets/Katracy.ttf', 40)
-        text = font.render("YOU LOST! :(", True, (99, 181, 181))
-        self.display_surface.blit(text, (SCREEN_WIDTH/2-text.get_size()[0]/2, SCREEN_HEIGHT/2))
     
     def send_game_info(self):
         self.opponent_bullets.empty()
@@ -174,3 +160,32 @@ class CameraGroup(pygame.sprite.Group):
         for sprite in self.sprites():
             offset_pos = sprite.rect.topleft - self.offset
             self.display_surface.blit(sprite.image,offset_pos)
+
+class MenuDrawer():
+    def __init__(self):
+        self.display_surface = pygame.display.get_surface()
+
+    def draw_wait_menu(self):
+        font = pygame.font.Font('./assets/Katracy.ttf', 40)
+        text = font.render("WAITING FOR A MATCH!", True, (99, 181, 181))
+        self.display_surface.blit(text, (SCREEN_WIDTH/2-text.get_size()[0]/2, SCREEN_HEIGHT/2))
+
+    def draw_win_menu(self):
+        font = pygame.font.Font('./assets/Katracy.ttf', 40)
+        text = font.render("YOU WON! :)", True, (99, 181, 181))
+        self.display_surface.blit(text, (SCREEN_WIDTH/2-text.get_size()[0]/2, SCREEN_HEIGHT/2))
+    
+    def draw_lose_menu(self):
+        font = pygame.font.Font('./assets/Katracy.ttf', 40)
+        text = font.render("YOU LOST! :(", True, (99, 181, 181))
+        self.display_surface.blit(text, (SCREEN_WIDTH/2-text.get_size()[0]/2, SCREEN_HEIGHT/2))
+    
+    def draw_scores(self, s1, s2):
+        font = pygame.font.Font('./assets/Katracy.ttf', 30)
+        my_points = font.render("My Points: {}".format(s1), True, (99, 181, 181))
+        opponent_points = font.render("Opponent Points: {}".format(s2), True, (99, 181, 181))
+        self.display_surface.blit(my_points, (SCREEN_WIDTH/12, SCREEN_HEIGHT/9))
+        self.display_surface.blit(opponent_points, (SCREEN_WIDTH*11/12-opponent_points.get_size()[0], SCREEN_HEIGHT/9))
+
+
+    

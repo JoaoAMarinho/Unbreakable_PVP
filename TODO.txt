@@ -1,7 +1,0 @@
--Display
-Player sprites (fix size, fix rect spacing)
-Players HP
-Win/Loose Menu
-Initial Menu
-Tile sprites
-
