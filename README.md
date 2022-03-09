@@ -26,7 +26,21 @@ $ pyhton client.py
 #### 3. Once connected have fun and may the best player win.
 
 ## Screenshots
-* Full Game View
+* Game Gif
+![Game gif](screenshoots/GameGif.gif)
+
+* Game
+![Game 2](screenshoots/Game2.PNG)
+![Game 1](screenshoots/Game1.PNG)
+
+* Start Menu
+![Start](screenshoots/StartMenu.PNG)
+
+* Win Menu
+![Win](screenshoots/WinMenu.PNG)
+
+* Lost Menu
+![Lose](screenshoots/LostMenu.PNG)
 
 ## Disclaimer
 This repository corresponds to a personal project. I do not take any responsibility over any code faults and do not take any credit for the sprites and sounds displayed throughout the game.
